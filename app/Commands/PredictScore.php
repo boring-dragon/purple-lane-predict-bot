@@ -41,8 +41,18 @@ class PredictScore extends Command
         ])->get(self::URL)->json()['data'])->where('time_elapsed', 'notstarted');
 
 
+        dd($this->qatarTimeToMaldivesTime('12/2/2022 22:00'));
 
 
+    }
+
+
+    public function qatarTimeToMaldivesTime($time)
+    {
+        // Convert time from qatar time to maldives timezone
+        $qatarTime = new \DateTime($time, new \DateTimeZone('Asia/Qatar'));
+        $qatarTime->setTimezone(new \DateTimeZone('Indian/Maldives'));
+        return $qatarTime->format('Y-m-d H:i:s');
     }
 
     /**
