@@ -9,8 +9,8 @@ Predict
 - [x] Get the fixtures to predict from PurpleLane API
 - [x] Convert Local time ( Qatar Time) to Maldives Time
 - [x] Mins Before `prediction_closes_at` equals to current time. Get the live score of the world cup fixture
-- [ ] Predict with for the given email with away team score & home team score
-- [ ] Host & run the app periodically on server
+- [x] Predict with for the given email with away team score & home team score
+- [x] Host & run the app periodically on server
 
 
 #### Some Routes
