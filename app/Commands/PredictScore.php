@@ -3,12 +3,16 @@
 namespace App\Commands;
 
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use LaravelZero\Framework\Commands\Command;
 
+use function Termwind\{render};
+
 class PredictScore extends Command
 {
-    public const URL = 'http://api.cup2022.ir/api/v1/match';
+
+    public const URL = 'https://copa22.medeiro.tech/matches/today';
     public const P_URL = 'https://foariapp.com/api/fixtures?tournament_uuid=97c1c316-c945-4f28-a4bc-d087e6e35f2d&email=j@live.mv';
 
     /**
@@ -32,27 +36,74 @@ class PredictScore extends Command
      */
     public function handle()
     {
-                //liveFixtures
-        $pLiveFixtures = collect(Http::get(self::P_URL)->json()['fixtures']);
+
+        render(<<<'HTML'
+        <div class="py-1 ml-2">
+            <div class="px-1 bg-blue-300 text-black">Score Predictor Started</div>
+            <em class="ml-1">
+                Lets get those scores right!
+            </em>
+        </div>
+    HTML);
+
+        //liveFixtures
+        $pLiveFixtures = collect(Http::get(self::P_URL)->json()['liveFixtures']);
+
+        $wUpCommingMatches = collect(Http::get(self::URL)->json());
+
+        $pLiveFixtures->each(function ($match) use ($pLiveFixtures, $wUpCommingMatches) {
 
 
-        $wUpCommingMatches = collect(Http::withHeaders([
-            'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MzgxNGI0ZmY5YzMyYjNmNjMxYjQ3YjUiLCJpYXQiOjE2Njk0MTc4MDgsImV4cCI6MTY2OTUwNDIwOH0.P6-nVYs4dYx4WdgO91xjmbBejtb4KlYpN_MDsFW-13o',
-        ])->get(self::URL)->json()['data'])->where('time_elapsed', 'notstarted');
+            $prediction_closes_at = Carbon::parse($match['prediction_closes_at'])->timezone('Indian/Maldives');
 
 
-        dd($this->qatarTimeToMaldivesTime('12/2/2022 22:00'));
+            $now = now();
 
 
+            $start = Carbon::createFromTimeString($prediction_closes_at->format('H:i'))->subMinutes(2);
+            $end = Carbon::createFromTimeString($prediction_closes_at->format('H:i'));
+
+            if ($start > $end) {
+                $end = $end->addDay();
+            }
+            if ($now->between($start, $end) || $now->addDay()->between($start, $end)) {
+
+
+                $live_current = $wUpCommingMatches->where('status', 'in_progress')->first();
+
+                $response = $this->predict($match, $live_current['awayTeam']['goals'],  $live_current['homeTeam']['goals']);
+
+                if ($response->status() == 400) {
+                    $this->error($response->json()['errorMessage']);
+                } else {
+                    $this->info('Prediction made for ' . $match['home_team']['name'] . ' vs ' . $match['away_team']['name']);
+                }
+            }
+        });
     }
 
 
-    public function qatarTimeToMaldivesTime($time)
+    public function predict($fixture, $away_team_score, $home_team_score)
     {
-        // Convert time from qatar time to maldives timezone
-        $qatarTime = new \DateTime($time, new \DateTimeZone('Asia/Qatar'));
-        $qatarTime->setTimezone(new \DateTimeZone('Indian/Maldives'));
-        return $qatarTime->format('Y-m-d H:i:s');
+        $this->info('Predicting score for ' . $fixture['home_team']['name'] . ' vs ' . $fixture['away_team']['name']);
+
+        return Http::get('https://foariapp.com/api/prediction', [
+            'email' => 'j@live.mv',
+            'fixture_id' => $fixture['id'],
+            'away_team_score' => $away_team_score,
+            'home_team_score' => $home_team_score,
+        ]);
+    }
+
+    public function sendToTelegram($message)
+    {
+
+        $apiToken = "5770485049:AAHvNbi6btPxy5Cq4nQOXVg5c9RGmaXdUPY";
+        $data = [
+            'chat_id' => '-1001899694587',
+            'text' => $message
+        ];
+        file_get_contents("https://api.telegram.org/bot$apiToken/sendMessage?" .http_build_query($data) );
     }
 
     /**
