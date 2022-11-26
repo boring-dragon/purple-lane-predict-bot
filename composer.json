@@ -17,6 +17,8 @@
     ],
     "require": {
         "php": "^8.0",
+        "guzzlehttp/guzzle": "^7.4",
+        "illuminate/http": "^9.0",
         "laravel-zero/framework": "^9.2",
         "nunomaduro/termwind": "^1.14"
     },
@@ -47,5 +49,5 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "bin": ["application"]
+    "bin": ["purplelane-bot"]
 }
