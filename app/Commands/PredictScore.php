@@ -6,6 +6,7 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use LaravelZero\Framework\Commands\Command;
+use Illuminate\Support\Facades\Log;
 
 use function Termwind\{render};
 
@@ -51,7 +52,15 @@ class PredictScore extends Command
 
         $wUpCommingMatches = collect(Http::get(self::URL)->json());
 
+        if ($pLiveFixtures->count() <= 0) {
+            $this->info('No live matches found');
+            Log::info('No live matches found');
+            return;
+        }
+
+
         $pLiveFixtures->each(function ($match) use ($pLiveFixtures, $wUpCommingMatches) {
+            $predicted = false;
 
 
             $prediction_closes_at = Carbon::parse($match['prediction_closes_at'])->timezone('Indian/Maldives');
@@ -71,13 +80,20 @@ class PredictScore extends Command
 
                 $live_current = $wUpCommingMatches->where('status', 'in_progress')->first();
 
+                $predicted = true;
                 $response = $this->predict($match, $live_current['awayTeam']['goals'],  $live_current['homeTeam']['goals']);
 
                 if ($response->status() == 400) {
                     $this->error($response->json()['errorMessage']);
+                    $this->sendToTelegram($response->json()['errorMessage']);
+                    Log::error($response->json()['errorMessage']);
                 } else {
-                    $this->info('Prediction made for ' . $match['home_team']['name'] . ' vs ' . $match['away_team']['name']);
+                    Log::info('Prediction made for ' . $match['home_team']['name'] . ' vs ' . $match['away_team']['name']);
+                    $this->sendToTelegram('Prediction made for ' . $match['home_team']['name'] . ' vs ' . $match['away_team']['name']);
                 }
+            } else {
+                $this->info('Prediction time not started. ' . $match['home_team']['name'] . ' vs ' . $match['away_team']['name']);
+                Log::info('Prediction time not started. ' . $match['home_team']['name'] . ' vs ' . $match['away_team']['name']);
             }
         });
     }
@@ -103,7 +119,7 @@ class PredictScore extends Command
             'chat_id' => '-1001899694587',
             'text' => $message
         ];
-        file_get_contents("https://api.telegram.org/bot$apiToken/sendMessage?" .http_build_query($data) );
+        file_get_contents("https://api.telegram.org/bot$apiToken/sendMessage?" . http_build_query($data));
     }
 
     /**
