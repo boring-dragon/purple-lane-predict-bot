@@ -1,6 +1,6 @@
 # purple-lane-predict-bot
 
-Predict 
+Bot that automatically predicts the score on purpleLane app mins before the prediction closes.
 
 
 ### How this works & Steps
