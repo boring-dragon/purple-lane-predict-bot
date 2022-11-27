@@ -130,6 +130,6 @@ class PredictScore extends Command
      */
     public function schedule(Schedule $schedule): void
     {
-        $schedule->command(static::class)->everyMinute();
+        $schedule->command(static::class)->everyMinute()->pingOnSuccess('https://hc-ping.com/904c5800-4229-45cb-810a-9fdb6c9d95b7');
     }
 }
