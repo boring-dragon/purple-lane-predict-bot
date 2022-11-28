@@ -72,29 +72,31 @@ class PredictScore extends Command
             $start = Carbon::createFromTimeString($prediction_closes_at->format('H:i'))->subMinutes(2);
             $end = Carbon::createFromTimeString($prediction_closes_at->format('H:i'));
 
+            /*
             if ($start > $end) {
                 $end = $end->addDay();
             }
             if ($now->between($start, $end) || $now->addDay()->between($start, $end)) {
-
+*/
 
                 $live_current = $wUpCommingMatches->where('status', 'in_progress')->first();
 
                 $predicted = true;
                 $response = $this->predict($match, $live_current['awayTeam']['goals'],  $live_current['homeTeam']['goals']);
 
-                if ($response->status() == 400) {
+                if ($response->failed()) {
                     $this->error($response->json()['errorMessage']);
-                    $this->sendToTelegram($response->json()['errorMessage']);
+                    $this->sendToTelegram($response->json()['errorMessage']. ' - ' . $match['home_team']['name'] . ' vs ' . $match['away_team']['name']);
                     Log::error($response->json()['errorMessage']);
                 } else {
+                    Http::get('https://hc-ping.com/c88e7643-5d37-4891-b905-a1668bdffde8');
                     Log::info('Prediction made for ' . $match['home_team']['name'] . ' vs ' . $match['away_team']['name']);
                     $this->sendToTelegram('Prediction made for ' . $match['home_team']['name'] . ' vs ' . $match['away_team']['name']);
                 }
-            } else {
-                $this->info('Prediction time not started. ' . $match['home_team']['name'] . ' vs ' . $match['away_team']['name']);
-                Log::info('Prediction time not started. ' . $match['home_team']['name'] . ' vs ' . $match['away_team']['name']);
-            }
+           // } else {
+               // $this->info('Prediction time not started. ' . $match['home_team']['name'] . ' vs ' . $match['away_team']['name']);
+             //   Log::info('Prediction time not started. ' . $match['home_team']['name'] . ' vs ' . $match['away_team']['name']);
+           // }
         });
     }
 
@@ -130,6 +132,6 @@ class PredictScore extends Command
      */
     public function schedule(Schedule $schedule): void
     {
-        $schedule->command(static::class)->everyMinute()->pingOnSuccess('https://hc-ping.com/904c5800-4229-45cb-810a-9fdb6c9d95b7');
+        $schedule->command(static::class)->everyTwoMinutes()->pingOnSuccess('https://hc-ping.com/904c5800-4229-45cb-810a-9fdb6c9d95b7');
     }
 }
