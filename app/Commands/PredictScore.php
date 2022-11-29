@@ -82,11 +82,11 @@ class PredictScore extends Command
                 $live_current = $wUpCommingMatches->where('status', 'in_progress')->first();
 
                 $predicted = true;
-                $response = $this->predict($match, $live_current['awayTeam']['goals'],  $live_current['homeTeam']['goals']);
+                $response = $this->predict($match);
 
                 if ($response->failed()) {
                     $this->error($response->json()['errorMessage']);
-                    $this->sendToTelegram($response->json()['errorMessage']. ' - ' . $match['home_team']['name'] . ' vs ' . $match['away_team']['name']);
+                    $this->sendToTelegram($response->json()['errorMessage']. ' - ' .'|'.$match['home_team_score'] . '| '.$match['home_team']['name'] . ' vs ' . '|'. $match['away_team_score'].'|'. $match['away_team']['name']);
                     Log::error($response->json()['errorMessage']);
                 } else {
                     Http::get('https://hc-ping.com/c88e7643-5d37-4891-b905-a1668bdffde8');
@@ -101,15 +101,15 @@ class PredictScore extends Command
     }
 
 
-    public function predict($fixture, $away_team_score, $home_team_score)
+    public function predict($fixture)
     {
         $this->info('Predicting score for ' . $fixture['home_team']['name'] . ' vs ' . $fixture['away_team']['name']);
 
         return Http::get('https://foariapp.com/api/prediction', [
             'email' => 'j@live.mv',
             'fixture_id' => $fixture['id'],
-            'away_team_score' => $away_team_score,
-            'home_team_score' => $home_team_score,
+            'away_team_score' => $fixture['away_team_score'],
+            'home_team_score' => $fixture['home_team_score'],
         ]);
     }
 
