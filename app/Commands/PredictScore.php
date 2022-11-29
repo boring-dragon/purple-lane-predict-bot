@@ -86,12 +86,12 @@ class PredictScore extends Command
 
                 if ($response->failed()) {
                     $this->error($response->json()['errorMessage']);
-                    $this->sendToTelegram($response->json()['errorMessage']. ' - ' .'|'.$match['home_team_score'] . '| '.$match['home_team']['name'] . ' vs ' . '|'. $match['away_team_score'].'|'. $match['away_team']['name']);
+                    $this->sendToTelegram($response->json()['errorMessage']. ' - ' .$match['home_team']['name'] . ' vs ' . $match['away_team']['name']);
                     Log::error($response->json()['errorMessage']);
                 } else {
                     Http::get('https://hc-ping.com/c88e7643-5d37-4891-b905-a1668bdffde8');
                     Log::info('Prediction made for ' . $match['home_team']['name'] . ' vs ' . $match['away_team']['name']);
-                    $this->sendToTelegram('Prediction made for ' . $match['home_team']['name'] . ' vs ' . $match['away_team']['name']);
+                    $this->sendToTelegram('Prediction made for'. ' - ' .'|'.$match['home_team_score'] . '| '.$match['home_team']['name'] . ' vs ' . '|'. $match['away_team_score'].'|'. $match['away_team']['name']);
                 }
            // } else {
                // $this->info('Prediction time not started. ' . $match['home_team']['name'] . ' vs ' . $match['away_team']['name']);
