@@ -116,7 +116,7 @@ class PredictScore extends Command
     public function sendToTelegram($message)
     {
 
-        $apiToken = "5770485049:AAHvNbi6btPxy5Cq4nQOXVg5c9RGmaXdUPY";
+        $apiToken = env('API_TOKEN');
         $data = [
             'chat_id' => '-1001899694587',
             'text' => $message
